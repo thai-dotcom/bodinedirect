@@ -104,7 +104,11 @@ function makeServer(env: Env) {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext
+): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/") return Response.json({
       service: "BodineDirect BigCommerce MCP", status: "online",
@@ -127,7 +131,7 @@ export default {
 
     if (url.pathname === "/mcp") {
       const handler = createMcpHandler(() => makeServer(env));
-      return handler(request, env);
+      return handler(request, env, ctx);
     }
     return new Response("Not Found", { status: 404 });
   },
