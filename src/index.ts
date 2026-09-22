@@ -359,6 +359,17 @@ export default {
     }
 
     // MCP
+    if (url.pathname === "/mcp") {
+      const authHeader = request.headers.get("Authorization");
+    
+      if (authHeader !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
+        return new Response("Unauthorized", {
+          status: 401,
+        });
+      }
+    }
+
+    // MCP
     const handler = createMcpHandler(
       () => makeServer(env),
       {
