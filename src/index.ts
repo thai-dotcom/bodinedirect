@@ -94,16 +94,64 @@ export default {
       }
     }
 
-    const handler = createMcpHandler(
-      () => makeServer(env),
-      {
-        route: "/mcp",
-        onerror: (error) => {
-          console.error("MCP HANDLER ERROR:", error);
-          console.error("MCP HANDLER STACK:", error.stack);
+function makeServer(env: Env) {
+  const server = new McpServer({
+    name: "BodineDirect BigCommerce",
+    version: "1.0.0",
+  });
+
+  // 1. PING TOOL
+  server.registerTool(
+    "ping",
+    {
+      description: "Test the BodineDirect MCP connection.",
+      inputSchema: {},
+    },
+    async () => ({
+      content: [
+        {
+          type: "text",
+          text: "BodineDirect MCP is working",
         },
-      }
-    );
+      ],
+    })
+  );
+
+  // 2. GET PRODUCT
+  server.registerTool(
+    "get_product",
+    {
+      description: "Get one product by numeric BigCommerce product ID. Read-only.",
+      inputSchema: {
+        productId: z.number().int().positive(),
+      },
+    },
+    async ({ productId }) =>
+      jsonText(
+        await bcFetch(env, `/catalog/products/${productId}`)
+      )
+  );
+
+  // 3. GET PRODUCT BY SKU
+  server.registerTool(
+    "get_product_by_sku",
+    {
+      description: "Look up BodineDirect products by exact SKU/model number. Read-only.",
+      inputSchema: {
+        sku: z.string().min(1),
+      },
+    },
+    async ({ sku }) =>
+      jsonText(
+        await bcFetch(env, "/catalog/products", {
+          sku,
+          limit: 50,
+        })
+      )
+  );
+
+  return server;
+}
 
     return handler(request, env, ctx);
   },
