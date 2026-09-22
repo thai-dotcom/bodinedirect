@@ -7,6 +7,7 @@ interface Env {
   BIGCOMMERCE_ACCESS_TOKEN: string;
   BIGCOMMERCE_CLIENT_ID?: string;
   BIGCOMMERCE_CLIENT_SECRET?: string;
+  MCP_AUTH_TOKEN: string;
 }
 
 const jsonText = (value: unknown) => ({
