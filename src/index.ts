@@ -317,7 +317,7 @@ export default {
         status: "online",
         transport: "Streamable HTTP",
         mcp: "/mcp",
-        access: "read-only",
+        access: "authenticated read-only",
       });
     }
 
