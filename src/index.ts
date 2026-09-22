@@ -1,6 +1,6 @@
 import { createMcpHandler } from "agents/mcp/server";
 import { McpServer } from "@modelcontextprotocol/server";
-import { z } from "zod";
+import * as z from "zod/v4";
 
 interface Env {
   BIGCOMMERCE_STORE_HASH: string;
