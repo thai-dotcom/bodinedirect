@@ -106,7 +106,7 @@ function makeServer(env: Env) {
     async ({ sku }) =>
       jsonText(
         await bcFetch(env, "/catalog/products", {
-          sku,
+          "sku:in": sku,
           limit: 50,
         })
       )
