@@ -27,78 +27,26 @@ async function bcFetch(env: Env, path: string, params: Record<string, string | n
 }
 
 function makeServer(env: Env) {
-  const server = new McpServer({ name: "BodineDirect BigCommerce", version: "1.0.0" });
+  const server = new McpServer({
+    name: "BodineDirect BigCommerce",
+    version: "1.0.0",
+  });
 
-  server.registerTool("search_products", {
-    description: "Search the BodineDirect catalog by product name or SKU. Read-only.",
-    inputSchema: {
-      query: z.string().min(1).describe("Product name, model number, or SKU"),
-      limit: z.number().int().min(1).max(50).default(10),
+  server.registerTool(
+    "ping",
+    {
+      description: "Test the BodineDirect MCP connection.",
+      inputSchema: {},
     },
-  }, async ({ query, limit }) => {
-    const [bySku, byName] = await Promise.all([
-      bcFetch(env, "/catalog/products", { sku: query, limit }),
-      bcFetch(env, "/catalog/products", { name: query, limit }),
-    ]);
-    const merged = new Map<number, any>();
-    for (const p of [...(bySku.data ?? []), ...(byName.data ?? [])]) merged.set(p.id, p);
-    return jsonText({ data: [...merged.values()].slice(0, limit) });
-  });
-
-  server.registerTool("get_product", {
-    description: "Get one product by numeric BigCommerce product ID. Read-only.",
-    inputSchema: { productId: z.number().int().positive() },
-  }, async ({ productId }) => jsonText(await bcFetch(env, `/catalog/products/${productId}`)));
-
-  server.registerTool("get_product_by_sku", {
-    description: "Look up BodineDirect products by exact SKU/model number. Read-only.",
-    inputSchema: { sku: z.string().min(1) },
-  }, async ({ sku }) => jsonText(await bcFetch(env, "/catalog/products", { sku, limit: 50 })));
-
-  server.registerTool("get_product_custom_fields", {
-    description: "Get custom fields/specifications for a product. Useful for the BodineDirect finder. Read-only.",
-    inputSchema: { productId: z.number().int().positive() },
-  }, async ({ productId }) => jsonText(await bcFetch(env, `/catalog/products/${productId}/custom-fields`, { limit: 250 })));
-
-  server.registerTool("get_product_variants", {
-    description: "Get variants for a product, including variant SKU and option data. Read-only.",
-    inputSchema: { productId: z.number().int().positive() },
-  }, async ({ productId }) => jsonText(await bcFetch(env, `/catalog/products/${productId}/variants`, { limit: 250 })));
-
-  server.registerTool("get_categories", {
-    description: "List or search BigCommerce product categories. Read-only.",
-    inputSchema: { name: z.string().optional(), limit: z.number().int().min(1).max(250).default(50) },
-  }, async ({ name, limit }) => jsonText(await bcFetch(env, "/catalog/categories", { name, limit })));
-
-  server.registerTool("get_brands", {
-    description: "List or search brands in the BodineDirect catalog. Read-only.",
-    inputSchema: { name: z.string().optional(), limit: z.number().int().min(1).max(250).default(50) },
-  }, async ({ name, limit }) => jsonText(await bcFetch(env, "/catalog/brands", { name, limit })));
-
-  server.registerTool("get_inventory", {
-    description: "Inspect product and variant inventory fields for a product. Read-only.",
-    inputSchema: { productId: z.number().int().positive() },
-  }, async ({ productId }) => {
-    const [product, variants] = await Promise.all([
-      bcFetch(env, `/catalog/products/${productId}`),
-      bcFetch(env, `/catalog/products/${productId}/variants`, { limit: 250 }),
-    ]);
-    const p = product.data ?? {};
-    return jsonText({
-      product: {
-        id: p.id, name: p.name, sku: p.sku,
-        inventory_level: p.inventory_level,
-        inventory_warning_level: p.inventory_warning_level,
-        inventory_tracking: p.inventory_tracking,
-        availability: p.availability,
-      },
-      variants: (variants.data ?? []).map((v: any) => ({
-        id: v.id, sku: v.sku,
-        inventory_level: v.inventory_level,
-        inventory_warning_level: v.inventory_warning_level,
-      })),
-    });
-  });
+    async () => ({
+      content: [
+        {
+          type: "text",
+          text: "BodineDirect MCP is working",
+        },
+      ],
+    })
+  );
 
   return server;
 }
