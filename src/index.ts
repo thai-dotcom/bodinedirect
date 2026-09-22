@@ -371,25 +371,9 @@ export default {
         authHeader !==
         `Bearer ${env.MCP_AUTH_TOKEN}`
       ) {
-        const receivedToken =
-          authHeader?.startsWith("Bearer ")
-            ? authHeader.slice(7)
-            : "";
-
-        return Response.json(
-          {
-            error: "Unauthorized",
-            authHeaderPresent: !!authHeader,
-            bearerPrefixPresent:
-              authHeader?.startsWith("Bearer ") ??
-              false,
-            receivedTokenLength:
-              receivedToken.length,
-            expectedTokenLength:
-              env.MCP_AUTH_TOKEN?.length ?? 0,
-          },
-          { status: 401 }
-        );
+        return new Response("Unauthorized", {
+          status: 401,
+        });
       }
 
       const handler = createMcpHandler(
