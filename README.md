@@ -14,3 +14,4 @@ Production secrets stay in Cloudflare. Never commit credentials to GitHub. The W
 
 ## Security
 The first package establishes the read-only MCP layer. Add authentication/access control before treating the public `/mcp` endpoint as production-ready.
+Deployment configured through Cloudflare Workers.
