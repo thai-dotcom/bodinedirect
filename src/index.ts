@@ -358,8 +358,8 @@ export default {
       }
     }
 
-    // MCP
-    if (url.pathname === "/mcp") {
+    // MCP - AUTHENTICATED
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
       const authHeader = request.headers.get("Authorization");
     
       if (authHeader !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
@@ -367,22 +367,28 @@ export default {
           status: 401,
         });
       }
+    
+      const handler = createMcpHandler(
+        () => makeServer(env),
+        {
+          route: "/mcp",
+          onerror: (error) => {
+            console.error("MCP HANDLER ERROR:", error);
+            console.error(
+              "MCP HANDLER STACK:",
+              error.stack
+            );
+          },
+        }
+      );
+    
+      return handler(request, env, ctx);
     }
-
-    // MCP
-    const handler = createMcpHandler(
-      () => makeServer(env),
-      {
-        route: "/mcp",
-        onerror: (error) => {
-          console.error("MCP HANDLER ERROR:", error);
-          console.error(
-            "MCP HANDLER STACK:",
-            error.stack
-          );
-        },
-      }
-    );
+    
+    // EVERYTHING ELSE
+    return new Response("Not Found", {
+      status: 404,
+    });
 
     return handler(request, env, ctx);
   },
