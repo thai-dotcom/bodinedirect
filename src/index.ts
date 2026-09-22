@@ -130,7 +130,16 @@ export default {
     }
 
     if (url.pathname === "/mcp") {
-      const handler = createMcpHandler(() => makeServer(env));
+      const handler = createMcpHandler(
+        () => makeServer(env),
+        {
+          onerror: (error) => {
+            console.error("MCP HANDLER ERROR:", error);
+            console.error("MCP HANDLER STACK:", error?.stack);
+          },
+        }
+      );
+    
       return handler(request, env, ctx);
     }
     return new Response("Not Found", { status: 404 });
