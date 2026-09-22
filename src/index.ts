@@ -105,43 +105,58 @@ function makeServer(env: Env) {
 
 export default {
   async fetch(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext
-): Promise<Response> {
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/") return Response.json({
-      service: "BodineDirect BigCommerce MCP", status: "online",
-      transport: "Streamable HTTP", mcp: "/mcp", access: "read-only",
-    });
+
+    if (url.pathname === "/") {
+      return Response.json({
+        service: "BodineDirect BigCommerce MCP",
+        status: "online",
+        transport: "Streamable HTTP",
+        mcp: "/mcp",
+        access: "read-only",
+      });
+    }
 
     if (url.pathname === "/test-bigcommerce") {
       try {
         const result = await bcFetch(env, "/catalog/products", { limit: 1 });
         const p = result.data?.[0];
+
         return Response.json({
-          success: true, store: env.BIGCOMMERCE_STORE_HASH,
+          success: true,
+          store: env.BIGCOMMERCE_STORE_HASH,
           productsReturned: result.data?.length ?? 0,
-          sampleProduct: p ? { id: p.id, name: p.name, sku: p.sku } : null,
+          sampleProduct: p
+            ? { id: p.id, name: p.name, sku: p.sku }
+            : null,
         });
       } catch (error) {
-        return Response.json({ success: false, message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+        return Response.json(
+          {
+            success: false,
+            message:
+              error instanceof Error ? error.message : "Unknown error",
+          },
+          { status: 500 }
+        );
       }
     }
 
-    if (url.pathname === "/mcp") {
-      const handler = createMcpHandler(
-        () => makeServer(env),
-        {
-          onerror: (error) => {
-            console.error("MCP HANDLER ERROR:", error);
-            console.error("MCP HANDLER STACK:", error?.stack);
-          },
-        }
-      );
-    
-      return handler(request, env, ctx);
-    }
-    return new Response("Not Found", { status: 404 });
+    const handler = createMcpHandler(
+      () => makeServer(env),
+      {
+        route: "/mcp",
+        onerror: (error) => {
+          console.error("MCP HANDLER ERROR:", error);
+          console.error("MCP HANDLER STACK:", error.stack);
+        },
+      }
+    );
+
+    return handler(request, env, ctx);
   },
 };
