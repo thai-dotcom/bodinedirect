@@ -58,7 +58,10 @@ function makeServer(env: Env) {
     version: "1.0.0",
   });
 
+  // ============================================================
   // 1. PING
+  // ============================================================
+
   server.registerTool(
     "ping",
     {
@@ -75,7 +78,10 @@ function makeServer(env: Env) {
     })
   );
 
+  // ============================================================
   // 2. SEARCH PRODUCTS
+  // ============================================================
+
   server.registerTool(
     "search_products",
     {
@@ -86,6 +92,7 @@ function makeServer(env: Env) {
           .string()
           .min(1)
           .describe("Product name, model number, or SKU"),
+
         limit: z
           .number()
           .int()
@@ -100,6 +107,7 @@ function makeServer(env: Env) {
           "sku:in": query,
           limit,
         }),
+
         bcFetch(env, "/catalog/products", {
           name: query,
           limit,
@@ -121,16 +129,24 @@ function makeServer(env: Env) {
     }
   );
 
+  // ============================================================
   // 3. GET PRODUCT
+  // ============================================================
+
   server.registerTool(
     "get_product",
     {
       description:
         "Get one product by numeric BigCommerce product ID. Read-only.",
+
       inputSchema: z.object({
-        productId: z.number().int().positive(),
+        productId: z
+          .number()
+          .int()
+          .positive(),
       }),
     },
+
     async ({ productId }) =>
       jsonText(
         await bcFetch(
@@ -140,16 +156,21 @@ function makeServer(env: Env) {
       )
   );
 
+  // ============================================================
   // 4. GET PRODUCT BY SKU
+  // ============================================================
+
   server.registerTool(
     "get_product_by_sku",
     {
       description:
         "Look up BodineDirect products by exact SKU/model number. Read-only.",
+
       inputSchema: z.object({
         sku: z.string().min(1),
       }),
     },
+
     async ({ sku }) =>
       jsonText(
         await bcFetch(env, "/catalog/products", {
@@ -159,54 +180,79 @@ function makeServer(env: Env) {
       )
   );
 
+  // ============================================================
   // 5. GET PRODUCT CUSTOM FIELDS
+  // ============================================================
+
   server.registerTool(
     "get_product_custom_fields",
     {
       description:
         "Get custom fields/specifications for a product. Useful for the BodineDirect finder. Read-only.",
+
       inputSchema: z.object({
-        productId: z.number().int().positive(),
+        productId: z
+          .number()
+          .int()
+          .positive(),
       }),
     },
+
     async ({ productId }) =>
       jsonText(
         await bcFetch(
           env,
           `/catalog/products/${productId}/custom-fields`,
-          { limit: 250 }
+          {
+            limit: 250,
+          }
         )
       )
   );
 
+  // ============================================================
   // 6. GET PRODUCT VARIANTS
+  // ============================================================
+
   server.registerTool(
     "get_product_variants",
     {
       description:
         "Get variants for a product, including variant SKU and option data. Read-only.",
+
       inputSchema: z.object({
-        productId: z.number().int().positive(),
+        productId: z
+          .number()
+          .int()
+          .positive(),
       }),
     },
+
     async ({ productId }) =>
       jsonText(
         await bcFetch(
           env,
           `/catalog/products/${productId}/variants`,
-          { limit: 250 }
+          {
+            limit: 250,
+          }
         )
       )
   );
 
+  // ============================================================
   // 7. GET CATEGORIES
+  // ============================================================
+
   server.registerTool(
     "get_categories",
     {
       description:
         "List or search BigCommerce product categories. Read-only.",
+
       inputSchema: z.object({
         name: z.string().optional(),
+
         limit: z
           .number()
           .int()
@@ -215,23 +261,33 @@ function makeServer(env: Env) {
           .default(50),
       }),
     },
+
     async ({ name, limit }) =>
       jsonText(
-        await bcFetch(env, "/catalog/categories", {
-          name,
-          limit,
-        })
+        await bcFetch(
+          env,
+          "/catalog/categories",
+          {
+            name,
+            limit,
+          }
+        )
       )
   );
 
+  // ============================================================
   // 8. GET BRANDS
+  // ============================================================
+
   server.registerTool(
     "get_brands",
     {
       description:
         "List or search brands in the BodineDirect catalog. Read-only.",
+
       inputSchema: z.object({
         name: z.string().optional(),
+
         limit: z
           .number()
           .int()
@@ -240,37 +296,54 @@ function makeServer(env: Env) {
           .default(50),
       }),
     },
+
     async ({ name, limit }) =>
       jsonText(
-        await bcFetch(env, "/catalog/brands", {
-          name,
-          limit,
-        })
+        await bcFetch(
+          env,
+          "/catalog/brands",
+          {
+            name,
+            limit,
+          }
+        )
       )
   );
 
+  // ============================================================
   // 9. GET INVENTORY
+  // ============================================================
+
   server.registerTool(
     "get_inventory",
     {
       description:
         "Inspect product and variant inventory fields for a product. Read-only.",
+
       inputSchema: z.object({
-        productId: z.number().int().positive(),
+        productId: z
+          .number()
+          .int()
+          .positive(),
       }),
     },
+
     async ({ productId }) => {
-      const [product, variants] = await Promise.all([
-        bcFetch(
-          env,
-          `/catalog/products/${productId}`
-        ),
-        bcFetch(
-          env,
-          `/catalog/products/${productId}/variants`,
-          { limit: 250 }
-        ),
-      ]);
+      const [product, variants] =
+        await Promise.all([
+          bcFetch(
+            env,
+            `/catalog/products/${productId}`
+          ),
+
+          bcFetch(
+            env,
+            `/catalog/products/${productId}/variants`,
+            {
+              limit: 250,
+            }
+          ),
+        ]);
 
       const p = product.data ?? {};
 
@@ -279,28 +352,206 @@ function makeServer(env: Env) {
           id: p.id,
           name: p.name,
           sku: p.sku,
-          inventory_level: p.inventory_level,
+
+          inventory_level:
+            p.inventory_level,
+
           inventory_warning_level:
             p.inventory_warning_level,
-          inventory_tracking: p.inventory_tracking,
-          availability: p.availability,
+
+          inventory_tracking:
+            p.inventory_tracking,
+
+          availability:
+            p.availability,
         },
 
-        variants: (variants.data ?? []).map(
-          (v: any) => ({
-            id: v.id,
-            sku: v.sku,
-            inventory_level: v.inventory_level,
-            inventory_warning_level:
-              v.inventory_warning_level,
-          })
-        ),
+        variants: (
+          variants.data ?? []
+        ).map((v: any) => ({
+          id: v.id,
+          sku: v.sku,
+
+          inventory_level:
+            v.inventory_level,
+
+          inventory_warning_level:
+            v.inventory_warning_level,
+        })),
       });
     }
   );
 
+  // ============================================================
+  // 10. SCAN CATALOG
+  // ============================================================
+
+  server.registerTool(
+    "scan_catalog",
+    {
+      description:
+        "Scan a page of the BodineDirect BigCommerce product catalog. Returns compact product and specification data for catalog auditing. Read-only.",
+
+      inputSchema: z.object({
+        page: z
+          .number()
+          .int()
+          .min(1)
+          .default(1)
+          .describe(
+            "BigCommerce catalog page number."
+          ),
+
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(250)
+          .default(50)
+          .describe(
+            "Products per page. Maximum 250."
+          ),
+
+        includeCustomFields: z
+          .boolean()
+          .default(true)
+          .describe(
+            "Include custom fields/specifications."
+          ),
+      }),
+    },
+
+    async ({
+      page,
+      limit,
+      includeCustomFields,
+    }) => {
+      const params: Record<
+        string,
+        string | number | undefined
+      > = {
+        page,
+        limit,
+      };
+
+      /*
+       * BigCommerce can include custom fields
+       * directly in the product response.
+       *
+       * This prevents us from having to make
+       * one extra API request per product.
+       */
+      if (includeCustomFields) {
+        params.include = "custom_fields";
+      }
+
+      const productsResponse =
+        await bcFetch(
+          env,
+          "/catalog/products",
+          params
+        );
+
+      const products =
+        productsResponse.data ?? [];
+
+      const compactProducts =
+        products.map((product: any) => {
+          const customFields =
+            includeCustomFields
+              ? (
+                  product.custom_fields ?? []
+                ).map((field: any) => ({
+                  id: field.id,
+                  name: field.name,
+                  value: field.value,
+                }))
+              : undefined;
+
+          return {
+            id: product.id,
+
+            sku: product.sku,
+
+            name: product.name,
+
+            type: product.type,
+
+            brand_id:
+              product.brand_id,
+
+            categories:
+              product.categories ?? [],
+
+            price: product.price,
+
+            sale_price:
+              product.sale_price,
+
+            inventory_level:
+              product.inventory_level,
+
+            inventory_tracking:
+              product.inventory_tracking,
+
+            availability:
+              product.availability,
+
+            is_visible:
+              product.is_visible,
+
+            custom_url:
+              product.custom_url?.url ??
+              null,
+
+            custom_fields:
+              customFields,
+          };
+        });
+
+      return jsonText({
+        scan: {
+          page,
+
+          limit,
+
+          productsReturned:
+            compactProducts.length,
+
+          totalProducts:
+            productsResponse.meta
+              ?.pagination?.total ??
+            null,
+
+          totalPages:
+            productsResponse.meta
+              ?.pagination
+              ?.total_pages ??
+            null,
+
+          currentPage:
+            productsResponse.meta
+              ?.pagination
+              ?.current_page ??
+            page,
+        },
+
+        products:
+          compactProducts,
+      });
+    }
+  );
+
+  // ============================================================
+  // RETURN MCP SERVER
+  // ============================================================
+
   return server;
 }
+
+// ============================================================
+// CLOUDFLARE WORKER
+// ============================================================
 
 export default {
   async fetch(
@@ -308,34 +559,61 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    const url = new URL(request.url);
+    const url =
+      new URL(request.url);
 
+    // ==========================================================
     // ROOT STATUS
+    // ==========================================================
+
     if (url.pathname === "/") {
       return Response.json({
-        service: "BodineDirect BigCommerce MCP",
+        service:
+          "BodineDirect BigCommerce MCP",
+
         status: "online",
-        transport: "Streamable HTTP",
+
+        transport:
+          "Streamable HTTP",
+
         mcp: "/mcp",
-        access: "authenticated read-only",
+
+        access:
+          "authenticated read-only",
       });
     }
 
+    // ==========================================================
     // DIRECT BIGCOMMERCE TEST
-    if (url.pathname === "/test-bigcommerce") {
-      try {
-        const result = await bcFetch(
-          env,
-          "/catalog/products",
-          { limit: 1 }
-        );
+    // ==========================================================
 
-        const p = result.data?.[0];
+    if (
+      url.pathname ===
+      "/test-bigcommerce"
+    ) {
+      try {
+        const result =
+          await bcFetch(
+            env,
+            "/catalog/products",
+            {
+              limit: 1,
+            }
+          );
+
+        const p =
+          result.data?.[0];
 
         return Response.json({
           success: true,
-          store: env.BIGCOMMERCE_STORE_HASH,
-          productsReturned: result.data?.length ?? 0,
+
+          store:
+            env.BIGCOMMERCE_STORE_HASH,
+
+          productsReturned:
+            result.data?.length ??
+            0,
+
           sampleProduct: p
             ? {
                 id: p.id,
@@ -348,57 +626,81 @@ export default {
         return Response.json(
           {
             success: false,
+
             message:
               error instanceof Error
                 ? error.message
                 : "Unknown error",
           },
-          { status: 500 }
+
+          {
+            status: 500,
+          }
         );
       }
     }
 
+    // ==========================================================
     // MCP - AUTHENTICATED
+    // ==========================================================
+
     if (
       url.pathname === "/mcp" ||
       url.pathname === "/mcp/"
     ) {
       const authHeader =
-        request.headers.get("Authorization");
+        request.headers.get(
+          "Authorization"
+        );
 
-      // TEMPORARY SAFE AUTH DIAGNOSTIC
       if (
         authHeader !==
         `Bearer ${env.MCP_AUTH_TOKEN}`
       ) {
-        return new Response("Unauthorized", {
-          status: 401,
-        });
+        return new Response(
+          "Unauthorized",
+          {
+            status: 401,
+          }
+        );
       }
 
-      const handler = createMcpHandler(
-        () => makeServer(env),
-        {
-          route: "/mcp",
-          onerror: (error) => {
-            console.error(
-              "MCP HANDLER ERROR:",
-              error
-            );
-            console.error(
-              "MCP HANDLER STACK:",
-              error.stack
-            );
-          },
-        }
-      );
+      const handler =
+        createMcpHandler(
+          () => makeServer(env),
+          {
+            route: "/mcp",
 
-      return handler(request, env, ctx);
+            onerror: (error) => {
+              console.error(
+                "MCP HANDLER ERROR:",
+                error
+              );
+
+              console.error(
+                "MCP HANDLER STACK:",
+                error.stack
+              );
+            },
+          }
+        );
+
+      return handler(
+        request,
+        env,
+        ctx
+      );
     }
 
+    // ==========================================================
     // EVERYTHING ELSE
-    return new Response("Not Found", {
-      status: 404,
-    });
+    // ==========================================================
+
+    return new Response(
+      "Not Found",
+      {
+        status: 404,
+      }
+    );
   },
 };
