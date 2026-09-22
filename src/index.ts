@@ -80,9 +80,9 @@ function makeServer(env: Env) {
     {
       description:
         "Get one product by numeric BigCommerce product ID. Read-only.",
-      inputSchema: {
+      inputSchema: z.object({
         productId: z.number().int().positive(),
-      },
+      }),
     },
     async ({ productId }) =>
       jsonText(
@@ -99,9 +99,9 @@ function makeServer(env: Env) {
     {
       description:
         "Look up BodineDirect products by exact SKU/model number. Read-only.",
-      inputSchema: {
+      inputSchema: z.object({
         sku: z.string().min(1),
-      },
+      }),
     },
     async ({ sku }) =>
       jsonText(
